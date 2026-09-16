@@ -1,53 +1,81 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using TaskTrackerAPI.DTOS;
-using TaskTrackerAPI.Models;
 using TaskTrackerAPI.Services;
-namespace TaskTrackerAPI.Controllers
+
+namespace TaskTrackerAPI.Controllers;
+
+[ApiController, Authorize, Route("api/tasks")]
+public class TaskController(ITaskService taskService) : ControllerBase
 {
-    [Route("api/[controller]")]
-    public class TaskController : ControllerBase
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<TaskResponseDto>>> GetAllTasks(
+        [FromQuery] string? status,
+        [FromQuery] string? priority,
+        [FromQuery] int? assignedToId,
+        [FromQuery] string? search)
     {
-        private readonly ITaskService _taskService;
-        public TaskController(ITaskService taskService)
-        {
-            _taskService = taskService;
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAllTasks()
-        {
-            var tasks = await _taskService.GetTasks(); 
-            return Ok(tasks);
-        }
-        [HttpGet("{id}")]
-        public IActionResult GetTask(int id)
-        {
-            var task = _taskService.GetTask(id);
-            return Ok(task);
-        }
-        [HttpPost]
-        public IActionResult CreateTask(TaskCreateDto dto)
-        {  var task = new TaskItem
-            {
-                Title = dto.Title,
-                Description = dto.Description,
-                Status = "Pending"
-                
-            };
-            return Ok();
-        }
-
-        [HttpPatch("{id}")]
-        public IActionResult UpdateTask(int id)
-        {
-            return Ok();
-        }
-        [HttpDelete("{id}")]
-        public IActionResult DeleteTask(int id)
-        {
-            return Ok();
-
-        }
-
+        var tasks = await taskService.GetTasksAsync(UserId, UserRole, status, priority, assignedToId, search);
+        return Ok(tasks);
     }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<TaskResponseDto>> GetTask(int id)
+    {
+        var task = await taskService.GetTaskAsync(id, UserId, UserRole);
+        return task is not null ? Ok(task) : NotFound();
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<TaskResponseDto>> CreateTask(TaskCreateDto dto)
+    {
+        try
+        {
+            var task = await taskService.CreateTaskAsync(dto, UserId);
+            return CreatedAtAction(nameof(GetTask), new { id = task.Id }, task);
+        }
+        catch (ArgumentException ex)
+        {
+            return ValidationProblem(ex.Message);
+        }
+    }
+
+    [HttpPatch("{id:int}")]
+    public async Task<ActionResult<TaskResponseDto>> UpdateTask(int id, TaskUpdateDto dto)
+    {
+        try
+        {
+            var task = await taskService.UpdateTaskAsync(id, dto, UserId, UserRole);
+            return task is not null ? Ok(task) : NotFound();
+        }
+        catch (ArgumentException ex)
+        {
+            return ValidationProblem(ex.Message);
+        }
+    }
+
+    [HttpPatch("{id:int}/status")]
+    public async Task<ActionResult<TaskResponseDto>> UpdateTaskStatus(int id, TaskStatusUpdateDto dto)
+    {
+        var task = await taskService.UpdateTaskStatusAsync(id, dto.Status, UserId, UserRole);
+        return task is not null ? Ok(task) : NotFound();
+    }
+
+    [HttpPatch("{id:int}/complete")]
+    public async Task<ActionResult<TaskResponseDto>> CompleteTask(int id)
+    {
+        var task = await taskService.UpdateTaskStatusAsync(id, "Done", UserId, UserRole);
+        return task is not null ? Ok(task) : NotFound();
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteTask(int id)
+    {
+        var deleted = await taskService.DeleteTaskAsync(id, UserId, UserRole);
+        return deleted ? NoContent() : NotFound();
+    }
+
+    private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private string UserRole => User.FindFirstValue(ClaimTypes.Role) ?? User.FindFirstValue("role") ?? "Member";
 }

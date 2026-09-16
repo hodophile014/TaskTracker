@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskTrackerAPI.Data;
 
@@ -11,9 +12,11 @@ using TaskTrackerAPI.Data;
 namespace TaskTrackerAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260913150827_AddTaskReminderTracking")]
+    partial class AddTaskReminderTracking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,9 +33,6 @@ namespace TaskTrackerAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("AssignedToUserId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
@@ -47,21 +47,13 @@ namespace TaskTrackerAPI.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("isActive");
 
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Medium")
-                        .HasColumnName("priority");
-
                     b.Property<DateTime?>("ReminderSentAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -72,10 +64,6 @@ namespace TaskTrackerAPI.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("AssignedToUserId", "IsActive");
 
                     b.HasIndex("UserId", "IsActive");
 
@@ -108,14 +96,6 @@ namespace TaskTrackerAPI.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("password");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasDefaultValue("Member")
-                        .HasColumnName("role");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -132,26 +112,17 @@ namespace TaskTrackerAPI.Migrations
 
             modelBuilder.Entity("TaskTrackerAPI.Models.TaskItem", b =>
                 {
-                    b.HasOne("TaskTrackerAPI.Models.User", "AssignedToUser")
-                        .WithMany("AssignedTasks")
-                        .HasForeignKey("AssignedToUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("TaskTrackerAPI.Models.User", "User")
                         .WithMany("Tasks")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AssignedToUser");
-
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("TaskTrackerAPI.Models.User", b =>
                 {
-                    b.Navigation("AssignedTasks");
-
                     b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618

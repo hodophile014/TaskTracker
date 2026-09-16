@@ -1,19 +1,24 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace TaskTrackerAPI.DTOS
 {
     public class TaskCreateDto
     {
-        public int Id { get; set; }
         [Required]
         [MaxLength(500)]
-        public string Title { get; set; }
-        [Required]
-        public string Description { get; set; }
-        [Required]
-        public bool Status { get; set; }
+        public string Title { get; set; } = string.Empty;
 
-        public int UserId { get; set; }
+        [Required]
+        public string Description { get; set; } = string.Empty;
 
+        public DateTime? DueDate { get; set; }
+
+        [MaxLength(20)]
+        public string? Priority { get; set; } = "Medium";
+
+        public int? AssignedToUserId { get; set; }
+
+        [MaxLength(50)]
+        public string? Status { get; set; } = "To Do";
     }
 }
