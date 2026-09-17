@@ -1,22 +1,27 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, CheckSquare, LogOut, Radio } from 'lucide-react';
+import { Plus, CheckSquare, LogOut, LayoutDashboard, ListTodo, Columns3, Users, Search, X } from 'lucide-react';
+
+export type Page = 'dashboard' | 'tasks' | 'kanban' | 'users';
 
 interface NavbarProps {
+  currentPage: Page;
+  onPageChange: (page: Page) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
   onOpenCreateModal: () => void;
   isRealtimeConnected: boolean;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenCreateModal, isRealtimeConnected }) => {
-  const { user, logout } = useAuth();
-
-  const getRoleBadgeClass = (role?: string) => {
-    switch (role) {
-      case 'Admin': return 'role-admin';
-      case 'Manager': return 'role-manager';
-      default: return 'role-member';
-    }
-  };
+export const Navbar: React.FC<NavbarProps> = ({
+  currentPage,
+  onPageChange,
+  searchQuery,
+  onSearchChange,
+  onOpenCreateModal,
+  isRealtimeConnected,
+}) => {
+  const { user, logout, isAdmin } = useAuth();
 
   const getInitials = (name?: string) => {
     if (!name) return 'U';
@@ -25,156 +30,131 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCreateModal, isRealtimeCon
     return name.slice(0, 2).toUpperCase();
   };
 
+  const navItems: { key: Page; label: string; icon: React.ReactNode }[] = [
+    { key: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={17} /> },
+    { key: 'tasks', label: 'Task Pins', icon: <ListTodo size={17} /> },
+    { key: 'kanban', label: 'Kanban Boards', icon: <Columns3 size={17} /> },
+  ];
+
+  if (isAdmin) {
+    navItems.push({ key: 'users', label: 'Team & Users', icon: <Users size={17} /> });
+  }
+
   return (
-    <header
-      style={{
-        height: 68,
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        flexShrink: 0,
-      }}
-    >
+    <header className="pinterest-navbar">
+      {/* Brand Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 10,
-            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff',
-            boxShadow: '0 4px 10px rgba(79, 70, 229, 0.25)',
-          }}
-        >
-          <CheckSquare size={22} />
-        </div>
-        <div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.3px' }}>
-            TaskTracker
-          </span>
-          <span style={{ fontSize: 12, color: '#64748b', marginLeft: 8, fontWeight: 500 }}>
-            Web API &bull; Brevo &bull; React
-          </span>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        {/* Real-time sync status */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '5px 12px',
-            borderRadius: 9999,
-            fontSize: 12,
-            fontWeight: 600,
-            backgroundColor: isRealtimeConnected ? '#ecfdf5' : '#fffbeb',
-            color: isRealtimeConnected ? '#059669' : '#d97706',
-            border: `1px solid ${isRealtimeConnected ? '#a7f3d0' : '#fde68a'}`,
-          }}
-          title={isRealtimeConnected ? 'SignalR live connection active' : 'Connecting to live updates'}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              backgroundColor: isRealtimeConnected ? '#10b981' : '#f59e0b',
-              boxShadow: isRealtimeConnected ? '0 0 8px #10b981' : 'none',
-            }}
-          />
-          <Radio size={13} />
-          {isRealtimeConnected ? 'Live Sync' : 'Reconnecting...'}
-        </div>
-
-        {/* New Task Button */}
         <button
-          onClick={onOpenCreateModal}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '8px 18px',
-            backgroundColor: '#4f46e5',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: 8,
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: 'pointer',
-            boxShadow: '0 2px 6px rgba(79, 70, 229, 0.25)',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#4338ca')}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#4f46e5')}
+          className="pinterest-logo-btn"
+          onClick={() => onPageChange('dashboard')}
+          title="TaskTracker Home"
         >
-          <Plus size={18} />
-          New Task
+          <div className="pinterest-logo-icon">
+            <CheckSquare size={22} strokeWidth={2.5} />
+          </div>
+          <span className="pinterest-logo-text">TaskTracker</span>
         </button>
 
-        {/* User Profile Info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, borderLeft: '1px solid #e2e8f0', paddingLeft: 16 }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              backgroundColor: '#e0e7ff',
-              color: '#4338ca',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 700,
-              fontSize: 14,
-            }}
+        {/* Navigation Tab Pills (Pinterest Style) */}
+        <nav className="nav-pills">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => onPageChange(item.key)}
+              className={`nav-pill-btn ${currentPage === item.key ? 'active' : ''}`}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Central Pinterest Rounded Search Bar */}
+      <div className="pinterest-search-container">
+        <Search size={18} className="search-icon-left" />
+        <input
+          type="text"
+          className="pinterest-search-input"
+          placeholder="Search pins, tasks, tags, or assignees..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+        {searchQuery && (
+          <button
+            className="search-clear-btn"
+            onClick={() => onSearchChange('')}
+            title="Clear search"
           >
+            <X size={12} />
+          </button>
+        )}
+      </div>
+
+      {/* Right Controls */}
+      <div className="nav-actions">
+        {/* Real-time live status pill */}
+        <div
+          className="live-sync-pill"
+          title={isRealtimeConnected ? 'SignalR Live Sync Active' : 'Connecting to Live Updates...'}
+        >
+          <span className="live-sync-dot" />
+          <span>{isRealtimeConnected ? 'Live' : 'Connecting...'}</span>
+        </div>
+
+        {/* Create Task Button (Pinterest Red Pill) */}
+        <button
+          className="btn-create-pin"
+          onClick={onOpenCreateModal}
+          title="Create a new task pin"
+        >
+          <Plus size={18} strokeWidth={3} />
+          <span>Create Pin</span>
+        </button>
+
+        {/* User Profile Pill */}
+        <div className="user-profile-pill">
+          <div className="avatar-circle">
             {getInitials(user?.username)}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>{user?.username}</span>
-              <span
-                className={getRoleBadgeClass(user?.role)}
-                style={{
-                  padding: '1px 8px',
-                  borderRadius: 9999,
-                  fontSize: 11,
-                  fontWeight: 700,
-                }}
-              >
-                {user?.role}
-              </span>
-            </div>
-            <span style={{ fontSize: 12, color: '#64748b' }}>{user?.email}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+              {user?.username}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>
+              {user?.role}
+            </span>
           </div>
 
           <button
             onClick={logout}
             style={{
-              background: 'none',
+              background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: '#64748b',
-              padding: 8,
-              borderRadius: 6,
+              color: 'var(--text-muted)',
+              padding: '6px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               marginLeft: 4,
+              transition: 'all 0.15s ease',
             }}
             title="Sign out"
-            onMouseOver={(e) => (e.currentTarget.style.color = '#dc2626')}
-            onMouseOut={(e) => (e.currentTarget.style.color = '#64748b')}
+            onMouseOver={(e) => {
+              e.currentTarget.style.color = 'var(--pinterest-red)';
+              e.currentTarget.style.background = '#ffebee';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.color = 'var(--text-muted)';
+              e.currentTarget.style.background = 'transparent';
+            }}
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
           </button>
         </div>
       </div>
     </header>
   );
 };
-

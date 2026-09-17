@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api';
-import { CheckSquare, CheckCircle2 } from 'lucide-react';
+import { CheckSquare, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -25,7 +25,6 @@ export const LoginPage: React.FC = () => {
         await login(email, password);
       } else {
         await authApi.register({ firstName, lastName, email, password });
-        // Redirect user to login page as requested
         setIsLogin(true);
         setPassword('');
         setSuccessMsg('Account created successfully! Please sign in with your credentials.');
@@ -37,95 +36,143 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '10px 14px',
-    border: '1px solid #e2e8f0',
-    borderRadius: 8,
-    fontSize: 14,
-    outline: 'none',
-    transition: 'border-color 0.2s',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: 13,
-    fontWeight: 600,
-    color: '#374151',
-    marginBottom: 4,
-  };
-
   return (
     <div style={{
+      minHeight: '100vh',
+      width: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '100vh',
-      backgroundColor: '#f8fafc',
+      backgroundColor: '#f7f7f8',
+      padding: 24,
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      {/* Decorative Pinterest Floating Board Elements in Background */}
+      <div style={{
+        position: 'absolute',
+        top: -60,
+        left: -60,
+        width: 320,
+        height: 320,
+        borderRadius: '50%',
+        background: 'rgba(230, 0, 35, 0.05)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: -80,
+        right: -80,
+        width: 380,
+        height: 380,
+        borderRadius: '50%',
+        background: 'rgba(99, 102, 241, 0.06)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* Main Pinterest Card */}
       <div style={{
         background: '#ffffff',
-        borderRadius: 16,
-        boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
-        padding: 40,
+        borderRadius: 36,
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.08)',
+        padding: '48px 44px',
         width: '100%',
-        maxWidth: 420,
+        maxWidth: 460,
+        position: 'relative',
+        zIndex: 10,
+        border: '1px solid rgba(0,0,0,0.04)',
       }}>
-        {/* Logo */}
+        {/* Pinterest Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{
-            width: 48, height: 48, borderRadius: 12,
-            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', marginBottom: 12,
+            width: 54,
+            height: 54,
+            borderRadius: '50%',
+            background: 'var(--pinterest-red)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#fff',
+            marginBottom: 14,
+            boxShadow: '0 6px 18px var(--pinterest-red-glow)',
           }}>
-            <CheckSquare size={26} />
+            <CheckSquare size={28} strokeWidth={2.5} />
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', margin: 0 }}>
-            TaskTracker
+
+          <h1 style={{
+            fontSize: 26,
+            fontWeight: 900,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.6px',
+            margin: 0,
+          }}>
+            Welcome to TaskTracker 📌
           </h1>
-          <p style={{ fontSize: 14, color: '#64748b', marginTop: 4 }}>
-            {isLogin ? 'Sign in to your account' : 'Create a new account'}
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 6, fontWeight: 500 }}>
+            {isLogin
+              ? 'Find and organize your team tasks on visual pinboards'
+              : 'Join and create your collaborative workflow boards'}
           </p>
         </div>
 
+        {/* Error Alert */}
         {error && (
           <div style={{
-            background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
-            borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16,
+            background: '#ffebee',
+            border: '1px solid #ffcdd2',
+            color: 'var(--pinterest-red)',
+            borderRadius: 16,
+            padding: '12px 16px',
+            fontSize: 13,
+            fontWeight: 600,
+            marginBottom: 20,
           }}>
             {error}
           </div>
         )}
 
+        {/* Success Alert */}
         {successMsg && (
           <div style={{
-            background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a',
-            borderRadius: 8, padding: '10px 14px', fontSize: 13, marginBottom: 16,
-            display: 'flex', alignItems: 'center', gap: 8,
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            color: '#059669',
+            borderRadius: 16,
+            padding: '12px 16px',
+            fontSize: 13,
+            fontWeight: 600,
+            marginBottom: 20,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
           }}>
             <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
             <span>{successMsg}</span>
           </div>
         )}
 
+        {/* Form */}
         <form onSubmit={handleSubmit}>
           {!isLogin && (
-            <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>First Name</label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+                  First Name
+                </label>
                 <input
-                  style={inputStyle}
+                  className="pinterest-input"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
                   placeholder="John"
                 />
               </div>
-              <div style={{ flex: 1 }}>
-                <label style={labelStyle}>Last Name</label>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+                  Last Name
+                </label>
                 <input
-                  style={inputStyle}
+                  className="pinterest-input"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
@@ -135,11 +182,13 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Email</label>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+              Email address
+            </label>
             <input
-              style={inputStyle}
               type="email"
+              className="pinterest-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -147,11 +196,13 @@ export const LoginPage: React.FC = () => {
             />
           </div>
 
-          <div style={{ marginBottom: 20 }}>
-            <label style={labelStyle}>Password</label>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+              Password
+            </label>
             <input
-              style={inputStyle}
               type="password"
+              className="pinterest-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -162,25 +213,25 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
+            className="btn-create-pin"
             style={{
               width: '100%',
-              padding: '11px 0',
-              backgroundColor: loading ? '#818cf8' : '#4f46e5',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 8,
+              padding: '13px 0',
+              justifyContent: 'center',
               fontSize: 15,
-              fontWeight: 600,
+              fontWeight: 800,
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
+            {loading ? 'Please wait...' : isLogin ? 'Log In' : 'Create Account'}
+            {!loading && <ArrowRight size={16} />}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <span style={{ fontSize: 13, color: '#64748b' }}>
-            {isLogin ? "Don't have an account? " : 'Already have an account? '}
+        {/* Switch mode */}
+        <div style={{ textAlign: 'center', marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border-subtle)' }}>
+          <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+            {isLogin ? 'Not on TaskTracker yet? ' : 'Already have an account? '}
           </span>
           <button
             onClick={() => {
@@ -189,11 +240,16 @@ export const LoginPage: React.FC = () => {
               setSuccessMsg('');
             }}
             style={{
-              background: 'none', border: 'none', color: '#4f46e5',
-              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              background: 'none',
+              border: 'none',
+              color: 'var(--pinterest-red)',
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer',
+              textDecoration: 'underline',
             }}
           >
-            {isLogin ? 'Sign Up' : 'Sign In'}
+            {isLogin ? 'Sign up' : 'Log in'}
           </button>
         </div>
       </div>

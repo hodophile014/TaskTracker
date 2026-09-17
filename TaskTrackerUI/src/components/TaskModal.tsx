@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { TaskItem, TaskPriority, TaskStatus, User } from '../types';
 import { tasksApi, usersApi } from '../services/api';
-import { X } from 'lucide-react';
+import { X, Calendar, User as UserIcon, Flame, Check } from 'lucide-react';
 
 interface TaskModalProps {
   task?: TaskItem | null;
@@ -9,7 +9,13 @@ interface TaskModalProps {
   onSaved: () => void;
 }
 
-const priorities: TaskPriority[] = ['Low', 'Medium', 'High', 'Urgent'];
+const priorities: { value: TaskPriority; label: string; color: string; bg: string }[] = [
+  { value: 'Low', label: 'Low', color: '#0284c7', bg: '#e0f2fe' },
+  { value: 'Medium', label: 'Medium', color: '#ca8a04', bg: '#fef9c3' },
+  { value: 'High', label: 'High', color: '#ea580c', bg: '#ffedd5' },
+  { value: 'Urgent', label: 'Urgent', color: '#e11d48', bg: '#ffe4e6' },
+];
+
 const statuses: TaskStatus[] = ['To Do', 'In Progress', 'In Review', 'Done'];
 
 export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onSaved }) => {
@@ -39,7 +45,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onSaved }) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
-      setError('Title is required');
+      setError('Please give your task pin a title');
       return;
     }
 
@@ -74,124 +80,195 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onSaved }) 
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '8px 12px',
-    border: '1px solid #cbd5e1',
-    borderRadius: 6,
-    fontSize: 14,
-    outline: 'none',
-    boxSizing: 'border-box',
-    marginTop: 4,
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: 13,
-    fontWeight: 600,
-    color: '#334155',
-    marginTop: 12,
-  };
-
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ padding: 24, maxWidth: 520 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
-            {isEdit ? 'Edit Task' : 'Create New Task'}
-          </h3>
+      <div
+        className="modal-pin-creator"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '24px 28px 18px',
+          borderBottom: '1px solid var(--border-subtle)',
+        }}>
+          <div>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
+              {isEdit ? 'Edit Task Pin 📌' : 'Create Task Pin 📌'}
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>
+              {isEdit ? 'Update task details, assignment, or deadlines' : 'Pin a new task to your board'}
+            </p>
+          </div>
+
           <button
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              background: '#f0f0f0',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: 'var(--text-secondary)',
+              transition: 'background 0.15s ease',
+            }}
+            title="Close"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
+        {/* Error Banner */}
         {error && (
           <div style={{
-            background: '#fee2e2',
-            border: '1px solid #fca5a5',
-            color: '#b91c1c',
-            padding: '8px 12px',
-            borderRadius: 6,
+            margin: '16px 28px 0',
+            background: '#ffebee',
+            color: 'var(--pinterest-red)',
+            padding: '10px 16px',
+            borderRadius: 14,
             fontSize: 13,
-            marginBottom: 12,
+            fontWeight: 600,
+            border: '1px solid #ffcdd2',
           }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label style={{ ...labelStyle, marginTop: 0 }}>Title *</label>
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} style={{ padding: '24px 28px 28px' }}>
+          {/* Title input */}
+          <div style={{ marginBottom: 18 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+              Title *
+            </label>
             <input
               type="text"
-              style={inputStyle}
+              className="pinterest-input"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Implement user dashboard"
+              placeholder="Add a title to your pin..."
               required
+              autoFocus
             />
           </div>
 
-          <div>
-            <label style={labelStyle}>Description</label>
+          {/* Description input */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+              Description
+            </label>
             <textarea
-              style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }}
+              className="pinterest-input"
+              style={{ minHeight: 90, resize: 'vertical' }}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide details about this task..."
+              placeholder="What is this task about? Add key details, links, or notes..."
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={labelStyle}>Priority</label>
-              <select
-                style={inputStyle}
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-              >
-                {priorities.map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Status</label>
-              <select
-                style={inputStyle}
-                value={status}
-                onChange={(e) => setStatus(e.target.value as TaskStatus)}
-              >
-                {statuses.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+          {/* Priority Pill Selector */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+              Priority
+            </label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {priorities.map((p) => {
+                const isSelected = priority === p.value;
+                return (
+                  <button
+                    key={p.value}
+                    type="button"
+                    onClick={() => setPriority(p.value)}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: 'var(--radius-pill)',
+                      border: isSelected ? `2px solid ${p.color}` : '2px solid transparent',
+                      background: p.bg,
+                      color: p.color,
+                      fontSize: 13,
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      boxShadow: isSelected ? `0 2px 8px ${p.color}40` : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {p.value === 'Urgent' && <Flame size={14} />}
+                    {isSelected && <Check size={14} strokeWidth={3} />}
+                    <span>{p.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {/* Status Pill Selector */}
+          <div style={{ marginBottom: 22 }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 8 }}>
+              Workflow Status
+            </label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {statuses.map((s) => {
+                const isSelected = status === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatus(s)}
+                    style={{
+                      padding: '7px 16px',
+                      borderRadius: 'var(--radius-pill)',
+                      border: isSelected ? '2px solid var(--text-primary)' : '2px solid var(--border-light)',
+                      background: isSelected ? 'var(--text-primary)' : '#ffffff',
+                      color: isSelected ? '#ffffff' : 'var(--text-secondary)',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Due Date & Assignee Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
             <div>
-              <label style={labelStyle}>Due Date</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+                <Calendar size={14} />
+                <span>Due Date</span>
+              </label>
               <input
                 type="date"
-                style={inputStyle}
+                className="pinterest-input"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
 
             <div>
-              <label style={labelStyle}>Assignee</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+                <UserIcon size={14} />
+                <span>Assignee</span>
+              </label>
               <select
-                style={inputStyle}
+                className="pinterest-input"
                 value={assignedToUserId || ''}
                 onChange={(e) => setAssignedToUserId(e.target.value ? Number(e.target.value) : undefined)}
+                style={{ cursor: 'pointer' }}
               >
-                <option value="">Unassigned (Defaults to you)</option>
+                <option value="">Unassigned (You)</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.username} ({u.role})
@@ -201,36 +278,36 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onSaved }) 
             </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 24 }}>
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
             <button
               type="button"
               onClick={onClose}
               style={{
-                padding: '8px 16px',
-                borderRadius: 6,
-                border: '1px solid #cbd5e1',
+                padding: '10px 22px',
+                borderRadius: 'var(--radius-pill)',
+                border: '1.5px solid var(--border-light)',
                 background: '#ffffff',
-                color: '#475569',
+                color: 'var(--text-primary)',
                 cursor: 'pointer',
-                fontWeight: 600,
+                fontWeight: 700,
+                fontSize: 14,
               }}
             >
               Cancel
             </button>
+
             <button
               type="submit"
               disabled={loading}
+              className="btn-create-pin"
               style={{
-                padding: '8px 20px',
-                borderRadius: 6,
-                border: 'none',
-                background: '#4f46e5',
-                color: '#ffffff',
+                fontSize: 14,
+                padding: '10px 26px',
                 cursor: loading ? 'not-allowed' : 'pointer',
-                fontWeight: 600,
               }}
             >
-              {loading ? 'Saving...' : isEdit ? 'Update Task' : 'Create Task'}
+              {loading ? 'Saving...' : isEdit ? 'Update Pin' : 'Save Pin'}
             </button>
           </div>
         </form>
@@ -238,4 +315,3 @@ export const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onSaved }) 
     </div>
   );
 };
-
