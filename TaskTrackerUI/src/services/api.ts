@@ -10,7 +10,8 @@ import {
   UserRole,
 } from '../types';
 
-const API_BASE = '/api';
+const BASE_URL = (((import.meta as any).env?.VITE_API_URL as string) || '').replace(/\/$/, '');
+const API_BASE = `${BASE_URL}/api`;
 
 export const getStoredToken = (): string | null => {
   return localStorage.getItem('tasktracker_token');
@@ -218,7 +219,7 @@ export function createSignalRConnection(
   onTaskStatusChanged: (taskId: number, newStatus: string) => void
 ): signalR.HubConnection {
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl('/hubs/tasks', {
+    .withUrl(`${BASE_URL}/hubs/tasks`, {
       accessTokenFactory: () => getStoredToken() || '',
       skipNegotiation: false,
     })

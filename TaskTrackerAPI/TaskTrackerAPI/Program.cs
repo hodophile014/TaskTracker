@@ -15,12 +15,12 @@ var builder = WebApplication.CreateBuilder(args);
 var jwt = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwt["Key"] ?? throw new InvalidOperationException("Jwt:Key must be configured.");
 
-// CORS for React SPA
+// CORS for React SPA (local + Vercel / Cloud deployments)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173")
+        policy.SetIsOriginAllowed(origin => true)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -122,10 +122,26 @@ app.UseExceptionHandler(x => x.Run(async c =>
     await c.Response.WriteAsJsonAsync(new { message, details = app.Environment.IsDevelopment() ? ex?.ToString() : null });
 }));
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskTracker API v1");
+    c.RoutePrefix = "swagger";
+});
+
+// Automatically ensure database schema is created on startup
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.EnsureCreated();
+    }
+    catch (Exception ex)
+    {
+        var log = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        log.LogWarning(ex, "Could not automatically initialize database schema: {Message}", ex.Message);
+    }
 }
 
 app.UseCors("AllowFrontend");
